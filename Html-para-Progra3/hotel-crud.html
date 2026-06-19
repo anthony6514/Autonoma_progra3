@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hotel Manager - CRUDs</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+    header { background: linear-gradient(135deg, #1e3a5f, #2563eb); padding: 20px 30px; display: flex; align-items: center; gap: 14px; }
+    header h1 { font-size: 1.6rem; font-weight: 700; letter-spacing: 1px; }
+    header span { font-size: 2rem; }
+    nav { display: flex; gap: 8px; padding: 16px 30px; background: #1e293b; border-bottom: 1px solid #334155; flex-wrap: wrap; }
+    nav button { padding: 9px 20px; border: none; border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: 600; transition: all .2s; background: #334155; color: #94a3b8; }
+    nav button.active, nav button:hover { background: #2563eb; color: #fff; transform: translateY(-1px); }
+    .section { display: none; padding: 30px; }
+    .section.active { display: block; }
+    .section-title { font-size: 1.4rem; font-weight: 700; margin-bottom: 20px; color: #60a5fa; border-left: 4px solid #2563eb; padding-left: 12px; }
+    .card { background: #1e293b; border-radius: 12px; padding: 24px; margin-bottom: 24px; border: 1px solid #334155; }
+    .card h3 { font-size: 0.8rem; color: #94a3b8; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 1px; }
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group label { font-size: 0.82rem; color: #94a3b8; font-weight: 500; }
+    .form-group input, .form-group select { background: #0f172a; border: 1px solid #475569; border-radius: 8px; padding: 9px 12px; color: #e2e8f0; font-size: 0.9rem; outline: none; transition: border .2s; }
+    .form-group input:focus, .form-group select:focus { border-color: #2563eb; }
+    .btn-row { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+    .btn { padding: 9px 22px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: all .2s; }
+    .btn-primary { background: #2563eb; color: #fff; }
+    .btn-primary:hover { background: #1d4ed8; }
+    .btn-secondary { background: #334155; color: #e2e8f0; }
+    .btn-secondary:hover { background: #475569; }
+    .btn-danger { background: #dc2626; color: #fff; }
+    .btn-danger:hover { background: #b91c1c; }
+    .btn-warning { background: #d97706; color: #fff; }
+    .btn-warning:hover { background: #b45309; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    th { background: #0f172a; padding: 11px 14px; text-align: left; color: #64748b; text-transform: uppercase; font-size: 0.75rem; letter-spacing: .5px; }
+    td { padding: 11px 14px; border-bottom: 1px solid #1e293b; color: #cbd5e1; }
+    tr:hover td { background: #1e2d42; }
+    .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+    .badge-green { background: #14532d; color: #4ade80; }
+    .badge-yellow { background: #713f12; color: #fbbf24; }
+    .badge-red { background: #7f1d1d; color: #f87171; }
+    .badge-blue { background: #1e3a5f; color: #60a5fa; }
+    .toast { position: fixed; bottom: 24px; right: 24px; padding: 14px 22px; border-radius: 10px; font-weight: 600; font-size: 0.9rem; z-index: 9999; animation: slideIn .3s ease; }
+    .toast-success { background: #14532d; color: #4ade80; border: 1px solid #16a34a; }
+    .toast-error { background: #7f1d1d; color: #f87171; border: 1px solid #dc2626; }
+    @keyframes slideIn { from { transform: translateX(100px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    .empty-state { text-align: center; padding: 40px; color: #475569; }
+    .search-bar { display: flex; gap: 10px; margin-bottom: 16px; }
+    .search-bar input { flex: 1; background: #0f172a; border: 1px solid #475569; border-radius: 8px; padding: 9px 14px; color: #e2e8f0; font-size: 0.9rem; outline: none; }
+    .search-bar input:focus { border-color: #2563eb; }
+    .actions-cell { display: flex; gap: 6px; }
+    .btn-sm { padding: 5px 12px; font-size: 0.78rem; }
+  </style>
+</head>
+<body>
+
+<header>
+  <span>🏨</span>
+  <h1>Hotel Manager</h1>
+</header>
+
+<nav>
+  <button class="active" onclick="showTab('habitaciones')">🛏️ Habitaciones</button>
+  <button onclick="showTab('huespedes')">👤 Huéspedes</button>
+  <button onclick="showTab('reservas')">📅 Reservas</button>
+  <button onclick="showTab('servicios')">✨ Servicios Extra</button>
+</nav>
+
+<!-- ===== HABITACIONES ===== -->
+<div id="tab-habitaciones" class="section active">
+  <div class="section-title">Gestión de Habitaciones</div>
+  <div class="card">
+    <h3 id="hab-form-title">➕ Nueva Habitación</h3>
+    <input type="hidden" id="hab-id" />
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Número</label>
+        <input type="text" id="hab-numero" placeholder="Ej: 101" />
+      </div>
+      <div class="form-group">
+        <label>Tipo</label>
+        <select id="hab-tipo">
+          <option value="">-- Seleccionar --</option>
+          <option>Simple</option>
+          <option>Doble</option>
+          <option>Suite</option>
+          <option>Presidencial</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Precio por noche ($)</label>
+        <input type="number" id="hab-precio" placeholder="0.00" step="0.01" />
+      </div>
+      <div class="form-group">
+        <label>Descripción</label>
+        <input type="text" id="hab-descripcion" placeholder="Vista al mar, AC..." />
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="guardarHabitacion()">💾 Guardar</button>
+      <button class="btn btn-secondary" onclick="limpiarHabitacion()">🔄 Limpiar</button>
+      <button class="btn btn-secondary" onclick="cargarHabitaciones()">📋 Recargar lista</button>
+    </div>
+  </div>
+  <div class="card">
+    <h3>📋 Lista de Habitaciones</h3>
+    <div class="search-bar">
+      <input type="text" id="hab-search" placeholder="Buscar por número o tipo..." oninput="filtrarTabla('hab-tbody','hab-search')" />
+    </div>
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr><th>ID</th><th>Número</th><th>Tipo</th><th>Precio</th><th>Descripción</th><th>Acciones</th></tr></thead>
+        <tbody id="hab-tbody"><tr><td colspan="6" class="empty-state">Cargando...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ===== HUÉSPEDES ===== -->
+<div id="tab-huespedes" class="section">
+  <div class="section-title">Gestión de Huéspedes</div>
+  <div class="card">
+    <h3 id="hue-form-title">➕ Nuevo Huésped</h3>
+    <input type="hidden" id="hue-id" />
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Nombre completo</label>
+        <input type="text" id="hue-nombre" placeholder="Juan Pérez" />
+      </div>
+      <div class="form-group">
+        <label>Documento (CI/Pasaporte)</label>
+        <input type="text" id="hue-documento" placeholder="1234567890" />
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="hue-email" placeholder="correo@ejemplo.com" />
+      </div>
+      <div class="form-group">
+        <label>Teléfono</label>
+        <input type="text" id="hue-telefono" placeholder="+593 99 999 9999" />
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="guardarHuesped()">💾 Guardar</button>
+      <button class="btn btn-secondary" onclick="limpiarHuesped()">🔄 Limpiar</button>
+      <button class="btn btn-secondary" onclick="cargarHuespedes()">📋 Recargar lista</button>
+    </div>
+  </div>
+  <div class="card">
+    <h3>📋 Lista de Huéspedes</h3>
+    <div class="search-bar">
+      <input type="text" id="hue-search" placeholder="Buscar por nombre o documento..." oninput="filtrarTabla('hue-tbody','hue-search')" />
+    </div>
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr><th>ID</th><th>Nombre</th><th>Documento</th><th>Email</th><th>Teléfono</th><th>Acciones</th></tr></thead>
+        <tbody id="hue-tbody"><tr><td colspan="6" class="empty-state">Cargando...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ===== RESERVAS ===== -->
+<div id="tab-reservas" class="section">
+  <div class="section-title">Gestión de Reservas</div>
+  <div class="card">
+    <h3 id="res-form-title">➕ Nueva Reserva</h3>
+    <input type="hidden" id="res-id" />
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Código de Reserva</label>
+        <input type="text" id="res-codigo" placeholder="RES-001" />
+      </div>
+      <div class="form-group">
+        <label>Fecha de Entrada</label>
+        <input type="date" id="res-fechaEntrada" />
+      </div>
+      <div class="form-group">
+        <label>Fecha de Salida</label>
+        <input type="date" id="res-fechaSalida" />
+      </div>
+      <div class="form-group">
+        <label>Estado</label>
+        <select id="res-estado">
+          <option value="">-- Seleccionar --</option>
+          <option>Pendiente</option>
+          <option>Confirmada</option>
+          <option>Cancelada</option>
+          <option>Completada</option>
+        </select>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="guardarReserva()">💾 Guardar</button>
+      <button class="btn btn-secondary" onclick="limpiarReserva()">🔄 Limpiar</button>
+      <button class="btn btn-secondary" onclick="cargarReservas()">📋 Recargar lista</button>
+    </div>
+  </div>
+  <div class="card">
+    <h3>📋 Lista de Reservas</h3>
+    <div class="search-bar">
+      <input type="text" id="res-search" placeholder="Buscar por código o estado..." oninput="filtrarTabla('res-tbody','res-search')" />
+    </div>
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr><th>ID</th><th>Código</th><th>Fecha Entrada</th><th>Fecha Salida</th><th>Estado</th><th>Acciones</th></tr></thead>
+        <tbody id="res-tbody"><tr><td colspan="6" class="empty-state">Cargando...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SERVICIOS EXTRA ===== -->
+<div id="tab-servicios" class="section">
+  <div class="section-title">Gestión de Servicios Extra</div>
+  <div class="card">
+    <h3 id="svc-form-title">➕ Nuevo Servicio Extra</h3>
+    <input type="hidden" id="svc-id" />
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Nombre del Servicio</label>
+        <input type="text" id="svc-nombre" placeholder="Desayuno, Spa, Transfer..." />
+      </div>
+      <div class="form-group">
+        <label>Categoría</label>
+        <select id="svc-categoria">
+          <option value="">-- Seleccionar --</option>
+          <option>Alimentación</option>
+          <option>Bienestar</option>
+          <option>Transporte</option>
+          <option>Entretenimiento</option>
+          <option>Otros</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Precio ($)</label>
+        <input type="number" id="svc-precio" placeholder="0.00" step="0.01" />
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="guardarServicio()">💾 Guardar</button>
+      <button class="btn btn-secondary" onclick="limpiarServicio()">🔄 Limpiar</button>
+      <button class="btn btn-secondary" onclick="cargarServicios()">📋 Recargar lista</button>
+    </div>
+  </div>
+  <div class="card">
+    <h3>📋 Lista de Servicios Extra</h3>
+    <div class="search-bar">
+      <input type="text" id="svc-search" placeholder="Buscar por nombre o categoría..." oninput="filtrarTabla('svc-tbody','svc-search')" />
+    </div>
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr><th>ID</th><th>Nombre</th><th>Categoría</th><th>Precio</th><th>Acciones</th></tr></thead>
+        <tbody id="svc-tbody"><tr><td colspan="5" class="empty-state">Cargando...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div id="toast" style="display:none"></div>
+
+<script>
+  const API = 'http://localhost:8080/api';
+
+  // ── Utilidades ──────────────────────────────────────────────────────────────
+  function showTab(name) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    event.currentTarget.classList.add('active');
+    if (name === 'habitaciones') cargarHabitaciones();
+    if (name === 'huespedes') cargarHuespedes();
+    if (name === 'reservas') cargarReservas();
+    if (name === 'servicios') cargarServicios();
+  }
+
+  function toast(msg, type = 'success') {
+    const t = document.getElementById('toast');
+    t.className = 'toast toast-' + type;
+    t.textContent = msg;
+    t.style.display = 'block';
+    setTimeout(() => { t.style.display = 'none'; }, 3000);
+  }
+
+  function filtrarTabla(tbodyId, inputId) {
+    const q = document.getElementById(inputId).value.toLowerCase();
+    document.querySelectorAll('#' + tbodyId + ' tr').forEach(row => {
+      row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+    });
+  }
+
+  function badgeEstado(estado) {
+    const map = { Pendiente: 'badge-yellow', Confirmada: 'badge-green', Cancelada: 'badge-red', Completada: 'badge-blue' };
+    return `<span class="badge ${map[estado] || 'badge-blue'}">${estado}</span>`;
+  }
+
+  async function apiFetch(url, opts = {}) {
+    const res = await fetch(API + url, { headers: { 'Content-Type': 'application/json' }, ...opts });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(JSON.stringify(err) || res.statusText);
+    }
+    return res.status === 204 ? null : res.json();
+  }
+
+  // ── HABITACIONES ────────────────────────────────────────────────────────────
+  async function cargarHabitaciones() {
+    const tbody = document.getElementById('hab-tbody');
+    tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Cargando...</td></tr>';
+    try {
+      const data = await apiFetch('/habitaciones');
+      if (!data.length) { tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Sin habitaciones registradas</td></tr>'; return; }
+      tbody.innerHTML = data.map(h => `
+        <tr>
+          <td>${h.id}</td><td>${h.numero}</td><td>${h.tipo}</td>
+          <td>$${Number(h.precio).toFixed(2)}</td><td>${h.descripcion}</td>
+          <td><div class="actions-cell">
+            <button class="btn btn-warning btn-sm" onclick="editarHabitacion(${h.id})">✏️ Editar</button>
+            <button class="btn btn-danger btn-sm" onclick="eliminarHabitacion(${h.id})">🗑️ Eliminar</button>
+          </div></td>
+        </tr>`).join('');
+    } catch (e) { tbody.innerHTML = `<tr><td colspan="6" class="empty-state" style="color:#f87171">Error: ${e.message}</td></tr>`; }
+  }
+
+  async function guardarHabitacion() {
+    const id = document.getElementById('hab-id').value;
+    const body = {
+      numero: document.getElementById('hab-numero').value.trim(),
+      tipo: document.getElementById('hab-tipo').value,
+      precio: parseFloat(document.getElementById('hab-precio').value),
+      descripcion: document.getElementById('hab-descripcion').value.trim()
+    };
+    if (!body.numero || !body.tipo || isNaN(body.precio) || !body.descripcion) { toast('Completa todos los campos', 'error'); return; }
+    try {
+      if (id) { await apiFetch('/habitaciones/' + id, { method: 'PUT', body: JSON.stringify(body) }); toast('Habitación actualizada ✅'); }
+      else { await apiFetch('/habitaciones', { method: 'POST', body: JSON.stringify(body) }); toast('Habitación creada ✅'); }
+      limpiarHabitacion(); cargarHabitaciones();
+    } catch (e) { toast('Error: ' + e.message, 'error'); }
+  }
+
+  async function editarHabitacion(id) {
+    const h = await apiFetch('/habitaciones/' + id);
+    document.getElementById('hab-id').value = h.id;
+    document.getElementById('hab-numero').value = h.numero;
+    document.getElementById('hab-tipo').value = h.tipo;
+    document.getElementById('hab-precio').value = h.precio;
+    document.getElementById('hab-descripcion').value = h.descripcion;
+    document.getElementById('hab-form-title').textContent = '✏️ Editar Habitación #' + h.numero;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  async function eliminarHabitacion(id) {
+    if (!confirm('¿Eliminar habitación ID ' + id + '?')) return;
+    try { await apiFetch('/habitaciones/' + id, { method: 'DELETE' }); toast('Habitación eliminada'); cargarHabitaciones(); }
+    catch (e) { toast('Error: ' + e.message, 'error'); }
+  }
+
+  function limpiarHabitacion() {
+    ['hab-id','hab-numero','hab-precio','hab-descripcion'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('hab-tipo').value = '';
+    document.getElementById('hab-form-title').textContent = '➕ Nueva Habitación';
+  }
+</script>
+
+<script>
+  // ── HUÉSPEDES ───────────────────────────────────────────────────────────────
+  async function cargarHuespedes() {
+    const tbody = document.getElementById('hue-tbody');
+    tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Cargando...</td></tr>';
+    try {
+      const data = await apiFetch('/huespedes');
+      if (!data.length) { tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Sin huéspedes registrados</td></tr>'; return; }
+      tbody.innerHTML = data.map(h => `
+        <tr>
+          <td>${h.id}</td><td>${h.nombre}</td><td>${h.documento}</td>
+          <td>${h.email}</td><td>${h.telefono}</td>
+          <td><div class="actions-cell">
+            <button class="btn btn-warning btn-sm" onclick="editarHuesped(${h.id})">✏️ Editar</button>
+            <button class="btn btn-danger btn-sm" onclick="eliminarHuesped(${h.id})">🗑️ Eliminar</button>
+          </div></td>
+        </tr>`).join('');
+    } catch (e) { tbody.innerHTML = `<tr><td colspan="6" class="empty-state" style="color:#f87171">Error: ${e.message}</td></tr>`; }
+  }
+
+  async function guardarHuesped() {
+    const id = document.getElementById('hue-id').value;
+    const body = {
+      nombre: document.getElementById('hue-nombre').value.trim(),
+      documento: document.getElementById('hue-documento').value.trim(),
+      email: document.getElementById('hue-email').value.trim(),
+      telefono: document.getElementById('hue-telefono').value.trim()
+    };
+    if (!body.nombre || !body.documento || !body.email || !body.telefono) { toast('Completa todos los campos', 'error'); return; }
+    try {
+      if (id) { await apiFetch('/huespedes/' + id, { method: 'PUT', body: JSON.stringify(body) }); toast('Huésped actualizado ✅'); }
+      else { await apiFetch('/huespedes', { method: 'POST', body: JSON.stringify(body) }); toast('Huésped creado ✅'); }
+      limpiarHuesped(); cargarHuespedes();
+    } catch (e) { toast('Error: ' + e.message, 'error'); }
+  }
+
+  async function editarHuesped(id) {
+    const h = await apiFetch('/huespedes/' + id);
+    document.getElementById('hue-id').value = h.id;
+    document.getElementById('hue-nombre').value = h.nombre;
+    document.getElementById('hue-documento').value = h.documento;
+    document.getElementById('hue-email').value = h.email;
+    document.getElementById('hue-telefono').value = h.telefono;
+    document.getElementById('hue-form-title').textContent = '✏️ Editar Huésped: ' + h.nombre;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  async function eliminarHuesped(id) {
+    if (!confirm('¿Eliminar huésped ID ' + id + '?')) return;
+    try { await apiFetch('/huespedes/' + id, { method: 'DELETE' }); toast('Huésped eliminado'); cargarHuespedes(); }
+    catch (e) { toast('Error: ' + e.message, 'error'); }
+  }
+
+  function limpiarHuesped() {
+    ['hue-id','hue-nombre','hue-documento','hue-email','hue-telefono'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('hue-form-title').textContent = '➕ Nuevo Huésped';
+  }
+
+  // ── RESERVAS ────────────────────────────────────────────────────────────────
+  async function cargarReservas() {
+    const tbody = document.getElementById('res-tbody');
+    tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Cargando...</td></tr>';
+    try {
+      const data = await apiFetch('/reservas');
+      if (!data.length) { tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Sin reservas registradas</td></tr>'; return; }
+      tbody.innerHTML = data.map(r => `
+        <tr>
+          <td>${r.id}</td><td>${r.codigo}</td><td>${r.fechaEntrada}</td>
+          <td>${r.fechaSalida}</td><td>${badgeEstado(r.estado)}</td>
+          <td><div class="actions-cell">
+            <button class="btn btn-warning btn-sm" onclick="editarReserva(${r.id})">✏️ Editar</button>
+            <button class="btn btn-danger btn-sm" onclick="eliminarReserva(${r.id})">🗑️ Eliminar</button>
+          </div></td>
+        </tr>`).join('');
+    } catch (e) { tbody.innerHTML = `<tr><td colspan="6" class="empty-state" style="color:#f87171">Error: ${e.message}</td></tr>`; }
+  }
+
+  async function guardarReserva() {
+    const id = document.getElementById('res-id').value;
+    const body = {
+      codigo: document.getElementById('res-codigo').value.trim(),
+      fechaEntrada: document.getElementById('res-fechaEntrada').value,
+      fechaSalida: document.getElementById('res-fechaSalida').value,
+      estado: document.getElementById('res-estado').value
+    };
+    if (!body.codigo || !body.fechaEntrada || !body.fechaSalida || !body.estado) { toast('Completa todos los campos', 'error'); return; }
+    if (body.fechaSalida <= body.fechaEntrada) { toast('La fecha de salida debe ser posterior a la entrada', 'error'); return; }
+    try {
+      if (id) { await apiFetch('/reservas/' + id, { method: 'PUT', body: JSON.stringify(body) }); toast('Reserva actualizada ✅'); }
+      else { await apiFetch('/reservas', { method: 'POST', body: JSON.stringify(body) }); toast('Reserva creada ✅'); }
+      limpiarReserva(); cargarReservas();
+    } catch (e) { toast('Error: ' + e.message, 'error'); }
+  }
+
+  async function editarReserva(id) {
+    const r = await apiFetch('/reservas/' + id);
+    document.getElementById('res-id').value = r.id;
+    document.getElementById('res-codigo').value = r.codigo;
+    document.getElementById('res-fechaEntrada').value = r.fechaEntrada;
+    document.getElementById('res-fechaSalida').value = r.fechaSalida;
+    document.getElementById('res-estado').value = r.estado;
+    document.getElementById('res-form-title').textContent = '✏️ Editar Reserva: ' + r.codigo;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  async function eliminarReserva(id) {
+    if (!confirm('¿Eliminar reserva ID ' + id + '?')) return;
+    try { await apiFetch('/reservas/' + id, { method: 'DELETE' }); toast('Reserva eliminada'); cargarReservas(); }
+    catch (e) { toast('Error: ' + e.message, 'error'); }
+  }
+
+  function limpiarReserva() {
+    ['res-id','res-codigo','res-fechaEntrada','res-fechaSalida'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('res-estado').value = '';
+    document.getElementById('res-form-title').textContent = '➕ Nueva Reserva';
+  }
+</script>
+
+<script>
+  // ── SERVICIOS EXTRA ─────────────────────────────────────────────────────────
+  async function cargarServicios() {
+    const tbody = document.getElementById('svc-tbody');
+    tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Cargando...</td></tr>';
+    try {
+      const data = await apiFetch('/servicios-extras');
+      if (!data.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Sin servicios registrados</td></tr>'; return; }
+      tbody.innerHTML = data.map(s => `
+        <tr>
+          <td>${s.id}</td><td>${s.nombre}</td>
+          <td><span class="badge badge-blue">${s.categoria}</span></td>
+          <td>$${Number(s.precio).toFixed(2)}</td>
+          <td><div class="actions-cell">
+            <button class="btn btn-warning btn-sm" onclick="editarServicio(${s.id})">✏️ Editar</button>
+            <button class="btn btn-danger btn-sm" onclick="eliminarServicio(${s.id})">🗑️ Eliminar</button>
+          </div></td>
+        </tr>`).join('');
+    } catch (e) { tbody.innerHTML = `<tr><td colspan="5" class="empty-state" style="color:#f87171">Error: ${e.message}</td></tr>`; }
+  }
+
+  async function guardarServicio() {
+    const id = document.getElementById('svc-id').value;
+    const body = {
+      nombre: document.getElementById('svc-nombre').value.trim(),
+      categoria: document.getElementById('svc-categoria').value,
+      precio: parseFloat(document.getElementById('svc-precio').value)
+    };
+    if (!body.nombre || !body.categoria || isNaN(body.precio)) { toast('Completa todos los campos', 'error'); return; }
+    try {
+      if (id) { await apiFetch('/servicios-extras/' + id, { method: 'PUT', body: JSON.stringify(body) }); toast('Servicio actualizado ✅'); }
+      else { await apiFetch('/servicios-extras', { method: 'POST', body: JSON.stringify(body) }); toast('Servicio creado ✅'); }
+      limpiarServicio(); cargarServicios();
+    } catch (e) { toast('Error: ' + e.message, 'error'); }
+  }
+
+  async function editarServicio(id) {
+    const s = await apiFetch('/servicios-extras/' + id);
+    document.getElementById('svc-id').value = s.id;
+    document.getElementById('svc-nombre').value = s.nombre;
+    document.getElementById('svc-categoria').value = s.categoria;
+    document.getElementById('svc-precio').value = s.precio;
+    document.getElementById('svc-form-title').textContent = '✏️ Editar Servicio: ' + s.nombre;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  async function eliminarServicio(id) {
+    if (!confirm('¿Eliminar servicio ID ' + id + '?')) return;
+    try { await apiFetch('/servicios-extras/' + id, { method: 'DELETE' }); toast('Servicio eliminado'); cargarServicios(); }
+    catch (e) { toast('Error: ' + e.message, 'error'); }
+  }
+
+  function limpiarServicio() {
+    ['svc-id','svc-nombre','svc-precio'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('svc-categoria').value = '';
+    document.getElementById('svc-form-title').textContent = '➕ Nuevo Servicio Extra';
+  }
+
+  // Carga inicial
+  cargarHabitaciones();
+</script>
+</body>
+</html>
