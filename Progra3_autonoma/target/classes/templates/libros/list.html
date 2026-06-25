@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>Libros</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css"/>
+</head>
+<body class="bg-light">
+<div class="container py-5">
+    <h1>Libros</h1>
+    <a class="btn btn-success mb-3" href="/libros/nuevo">Nuevo libro</a>
+    <a class="btn btn-secondary mb-3" href="/">Inicio</a>
+    <table class="table table-bordered bg-white">
+        <thead>
+            <tr>
+                <th>Título</th>
+                <th>ISBN</th>
+                <th>Autor</th>
+                <th>Categorías</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="book : ${books}">
+                <td th:text="${book.title}"></td>
+                <td th:text="${book.isbn}"></td>
+                <td th:text="${book.author != null ? book.author.name : 'Sin autor'}"></td>
+                <td>
+                    <span th:each="cat, iterStat : ${book.categories}">
+                        <span th:text="${cat.name}"></span><span th:if="${!iterStat.last}">, </span>
+                    </span>
+                    <span th:if="${book.categories.isEmpty()}">Sin categoría</span>
+                </td>
+                <td>
+                    <a class="btn btn-primary btn-sm" th:href="@{'/libros/editar/' + ${book.id}}">Editar</a>
+                    <form th:action="@{'/libros/eliminar/' + ${book.id}}" method="post" style="display:inline">
+                        <button class="btn btn-danger btn-sm" type="submit">Eliminar</button>
+                    </form>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+</body>
+</html>

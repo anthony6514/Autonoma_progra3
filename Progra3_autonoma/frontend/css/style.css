@@ -1,0 +1,128 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: #f0f4f8;
+  color: #1e293b;
+  min-height: 100vh;
+  padding: 40px 16px;
+}
+
+.container {
+  max-width: 860px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+/* HEADER */
+header {
+  text-align: center;
+}
+header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #1e293b;
+  margin-bottom: 8px;
+}
+header p {
+  color: #64748b;
+  font-size: 1rem;
+}
+
+/* CARDS */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 28px 20px;
+  text-align: center;
+  text-decoration: none;
+  color: #1e293b;
+  box-shadow: 0 2px 12px rgba(0,0,0,.07);
+  transition: transform .15s, box-shadow .15s;
+  border: 1px solid #e2e8f0;
+}
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0,0,0,.12);
+}
+.card .icon { font-size: 2.2rem; display: block; margin-bottom: 12px; }
+.card h2    { font-size: 1.1rem; font-weight: 700; margin-bottom: 6px; }
+.card p     { font-size: .85rem; color: #64748b; }
+
+/* ENDPOINTS TABLE */
+.endpoints, .ejemplo {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 12px rgba(0,0,0,.07);
+  border: 1px solid #e2e8f0;
+}
+.endpoints h2, .ejemplo h2 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .88rem;
+}
+th {
+  text-align: left;
+  padding: 8px 12px;
+  color: #64748b;
+  font-size: .78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  border-bottom: 1px solid #e2e8f0;
+}
+td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+tr:last-child td { border: none; }
+
+.get, .post {
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: .72rem;
+  font-weight: 700;
+}
+.get  { background: #dcfce7; color: #16a34a; }
+.post { background: #dbeafe; color: #1d4ed8; }
+
+code {
+  background: #f1f5f9;
+  padding: 2px 6px;
+  border-radius: 5px;
+  font-size: .83rem;
+  font-family: Consolas, monospace;
+}
+
+/* EJEMPLO JSON */
+pre {
+  background: #0f172a;
+  color: #7dd3fc;
+  padding: 18px;
+  border-radius: 8px;
+  font-size: .85rem;
+  font-family: Consolas, monospace;
+  overflow: auto;
+  line-height: 1.6;
+}
+
+@media (max-width: 600px) {
+  .cards { grid-template-columns: 1fr; }
+}

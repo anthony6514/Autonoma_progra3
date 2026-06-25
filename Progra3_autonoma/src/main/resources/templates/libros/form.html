@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>Nuevo libro</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css"/>
+</head>
+<body class="bg-light">
+<div class="container py-5">
+    <h1 th:text="${book.id} != null ? 'Editar libro' : 'Nuevo libro'"></h1>
+    <form th:action="@{/libros/guardar}" th:object="${book}" method="post">
+        <input type="hidden" th:field="*{id}" />
+        <div class="mb-3">
+            <label class="form-label">Título</label>
+            <input class="form-control" type="text" th:field="*{title}" required />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">ISBN</label>
+            <input class="form-control" type="text" th:field="*{isbn}" required />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Autor</label>
+            <select class="form-select" name="authorId">
+                <option value="" disabled selected>Seleccionar autor</option>
+                <option th:each="author : ${authors}" th:value="${author.id}" th:text="${author.name}" th:selected="${book.author != null} ? ${author.id} == ${book.author.id} : false"></option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Categorías</label>
+            <div th:each="category : ${categories}" class="form-check">
+                <input class="form-check-input" type="checkbox" th:id="${'cat-' + category.id}" th:name="categoryIds" th:value="${category.id}"
+                       th:checked="${book.categories.contains(category)}"/>
+                <label class="form-check-label" th:for="${'cat-' + category.id}" th:text="${category.name}"></label>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Guardar</button>
+        <a class="btn btn-secondary" href="/libros">Cancelar</a>
+    </form>
+</div>
+</body>
+</html>
